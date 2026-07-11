@@ -106,10 +106,16 @@ To stop it: **Actions** tab → *EL AL seat watcher* → **⋯ → Disable workf
   continuously-updated mirror of what's bookable, but a seat showing up there
   doesn't guarantee EL AL will rebook *Tom's ticket* onto it — the tool's job is
   to tell you *when to go check / call*, fast. It never books.
-- **Nonstop EL AL to the US is pricey and often sold out.** Expect fares around
-  **$6,000+** one-way in peak summer, and some dates/gateways with nothing
-  available in economy at all. That's exactly why watching pays off — it pings
-  you the moment a seat opens.
+- **How it detects an economy seat (important).** Right now economy is sold out
+  on these flights, so Google Flights hands back the **business** fare (~$6k)
+  even when you search economy — and the data has no cabin label to read. But a
+  real economy seat prices **~$1–3k**, far below business. So the watcher uses a
+  **price ceiling** (`MAX_PRICE`, default $3,500): it ignores the ~$6k
+  business-only fallbacks and stays silent, and alerts the moment a flight shows
+  an economy-priced fare — i.e. someone freed up an economy seat. It's an
+  inference from price, not a direct read of seat inventory, but the gap is wide
+  and clean. **No email = economy still sold out** (the Actions tab still shows
+  green runs, so you know it's alive).
 - **BOS and LAX are thin.** EL AL flies them less often than JFK/EWR/MIA, so
   they'll alert rarely. They're kept in just in case.
 - **Confirm EL AL's unaccompanied-minor rules** (age, fees, forms, cutoff

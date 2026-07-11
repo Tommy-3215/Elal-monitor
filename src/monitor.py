@@ -175,14 +175,18 @@ def _compose_digest(alerts: List[Tuple[str, Itinerary]], s,
         bits.append(f"{len(cheaper)} cheaper")
     summary = ", ".join(bits) or "update"
     price_bit = f", from ${cheapest:,.0f}" if cheapest is not None else ""
-    subject = (f"✈ Nonstop EL AL {s.origin}→{'/'.join(gateways)}: "
-               f"{summary}{price_bit}")
+    subject = (f"🚨 Economy seat — nonstop EL AL {s.origin}→{'/'.join(gateways)}"
+               f": {summary}{price_bit} — CALL EL AL")
 
     carrier = "EL AL " if s.require_elal else ""
     lines = [
-        f"Nonstop {carrier}seats out of {s.origin} to a US gateway, before "
-        f"Tom's current {s.current_departure_date} flight. Meet him there and "
-        f"fly on to Austin together.",
+        f"An ECONOMY seat just appeared on a nonstop {carrier}flight out of "
+        f"{s.origin} — these get snapped up fast, so call EL AL now to grab it.",
+        "",
+        f"(Earlier than Tom's current {s.current_departure_date} flight. Meet "
+        f"him at the gateway and fly on to Austin together. Economy on these "
+        f"routes is normally sold out — a price in the ~$1–3k range here means a "
+        f"real economy seat opened up, versus the ~$6k business-only fallback.)",
         "",
     ]
 

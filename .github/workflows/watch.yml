@@ -35,10 +35,15 @@ jobs:
       # ---- Alert tuning ----
       MAX_STOPS: "0"          # nonstop only (a minor can't do connections)
       REQUIRE_ELAL: "true"    # only EL AL-operated flights
+      # KEY LEVER: economy on these routes is sold out right now, so Google
+      # hands back the ~$6k BUSINESS fare. A real economy seat prices ~$1-3k.
+      # This ceiling drops the business fallbacks so the watcher stays quiet
+      # until an actual economy seat opens, then alerts. Raise it if you think
+      # a real economy fare could exceed it; keep it well under ~$6k.
+      MAX_PRICE: "3500"
       TOP_PER_DATE: "3"
-      PRICE_DROP_THRESHOLD: "200"   # these fares are ~$6k; ignore tiny wiggles
+      PRICE_DROP_THRESHOLD: "150"
       PREFER_ELAL: "true"
-      # MAX_PRICE: "7000"     # uncomment to ignore anything pricier
       # ---- Email (address is not secret; the password is) ----
       NOTIFY_CHANNEL: email
       SMTP_HOST: smtp.gmail.com
