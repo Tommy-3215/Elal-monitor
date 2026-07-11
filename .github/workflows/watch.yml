@@ -3,7 +3,9 @@ name: EL AL seat watcher
 # Runs in GitHub's cloud on a schedule — nothing runs on anyone's computer.
 on:
   schedule:
-    - cron: "0 * * * *"   # every hour (UTC). Edit to change frequency.
+    - cron: "0 */3 * * *"   # every 3 hours (UTC). 5 gateways x 14 dates = 70
+                            # searches/run; hourly would exceed the free
+                            # private-repo Actions budget. Edit to change.
   workflow_dispatch: {}       # adds a manual "Run workflow" button for testing
 
 # Lets the run save its memory (state/seen.json) back to the repo so it
@@ -21,18 +23,22 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # ---- What to search (edit these freely; not secret) ----
+      # Tom is an unaccompanied minor and EL AL won't fly him on a connection,
+      # so we watch NONSTOP EL AL flights to US gateways a parent can meet him
+      # at, then fly on to Austin together.
       ORIGIN: TLV
-      DESTINATION: AUS
+      DESTINATIONS: "JFK,EWR,BOS,MIA,LAX"
       DATE_START: "2026-07-21"
       DATE_END: "2026-08-03"
       CURRENT_DEPARTURE_DATE: "2026-08-04"
       PASSENGERS: "1"
       # ---- Alert tuning ----
-      MAX_STOPS: "2"
+      MAX_STOPS: "0"          # nonstop only (a minor can't do connections)
+      REQUIRE_ELAL: "true"    # only EL AL-operated flights
       TOP_PER_DATE: "3"
-      PRICE_DROP_THRESHOLD: "25"
+      PRICE_DROP_THRESHOLD: "200"   # these fares are ~$6k; ignore tiny wiggles
       PREFER_ELAL: "true"
-      # MAX_PRICE: "1800"    # uncomment to ignore anything pricier
+      # MAX_PRICE: "7000"     # uncomment to ignore anything pricier
       # ---- Email (address is not secret; the password is) ----
       NOTIFY_CHANNEL: email
       SMTP_HOST: smtp.gmail.com

@@ -34,8 +34,8 @@ class SearchError(Exception):
     """Raised when a search can't be completed (network / upstream change)."""
 
 
-def search_one_date(s: Settings, date_str: str) -> List[Itinerary]:
-    """Return every economy option Google Flights lists for one date.
+def search_one(s: Settings, date_str: str, dest: str) -> List[Itinerary]:
+    """Return every economy option Google Flights lists for one date + route.
 
     Retries transient failures before giving up. Raises SearchError only if
     every attempt fails, so the caller can report it rather than silently
@@ -49,7 +49,7 @@ def search_one_date(s: Settings, date_str: str) -> List[Itinerary]:
                 flight_data=[FlightData(
                     date=date_str,
                     from_airport=s.origin,
-                    to_airport=s.destination,
+                    to_airport=dest,
                 )],
                 trip="one-way",
                 seat="economy",
@@ -61,12 +61,13 @@ def search_one_date(s: Settings, date_str: str) -> List[Itinerary]:
             last_exc = exc
             if attempt < _MAX_ATTEMPTS:
                 backoff = 2.5 * attempt + random.uniform(0, 1.5)
-                log.info("[%s] attempt %d/%d failed (%s); retrying in %.1fs.",
-                         date_str, attempt, _MAX_ATTEMPTS, exc, backoff)
+                log.info("[%s→%s] attempt %d/%d failed (%s); retrying in %.1fs.",
+                         date_str, dest, attempt, _MAX_ATTEMPTS, exc, backoff)
                 time.sleep(backoff)
     if result is None:
         raise SearchError(
-            f"search failed for {date_str} after {_MAX_ATTEMPTS} attempts: {last_exc}")
+            f"search failed for {s.origin}->{dest} {date_str} after "
+            f"{_MAX_ATTEMPTS} attempts: {last_exc}")
 
     raw = getattr(result, "flights", None) or []
     itineraries: List[Itinerary] = []
@@ -75,7 +76,7 @@ def search_one_date(s: Settings, date_str: str) -> List[Itinerary]:
             itineraries.append(Itinerary(
                 search_date=date_str,
                 origin=s.origin,
-                destination=s.destination,
+                destination=dest,
                 airlines=(getattr(f, "name", "") or "").strip(),
                 depart_time=(getattr(f, "departure", "") or "").strip(),
                 arrive_time=(getattr(f, "arrival", "") or "").strip(),
@@ -86,9 +87,9 @@ def search_one_date(s: Settings, date_str: str) -> List[Itinerary]:
                 is_best=bool(getattr(f, "is_best", False)),
             ))
         except Exception as exc:  # noqa: BLE001 -- skip a malformed row, keep going
-            log.warning("[%s] skipped an unparseable result: %s", date_str, exc)
+            log.warning("[%s→%s] skipped an unparseable result: %s", date_str, dest, exc)
 
-    log.info("[%s] %d economy options returned.", date_str, len(itineraries))
+    log.info("[%s→%s] %d economy options returned.", date_str, dest, len(itineraries))
     return itineraries
 
 

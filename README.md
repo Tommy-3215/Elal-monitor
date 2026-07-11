@@ -1,9 +1,15 @@
 # EL AL Seat Watcher ✈️ (cloud edition)
 
-Watches **TLV → AUS economy** availability and emails you when an option that's
-**earlier than your current Aug 4 flight** appears — or when a known option gets
-**cheaper**. It runs itself in the cloud, for free, on a schedule. Nothing runs
-on your computer or your phone.
+Watches **nonstop EL AL economy** flights from **TLV to five US gateways**
+(JFK, EWR, BOS, MIA, LAX) and emails you when a seat **earlier than Tom's
+current Aug 4 flight** appears — or when a known one gets **cheaper**. It runs
+itself in the cloud, for free, on a schedule. Nothing runs on your computer or
+your phone.
+
+> **Why nonstop, why EL AL?** Tom is an unaccompanied minor and EL AL won't fly
+> him on a connection, so any TLV→Austin routing (which requires stops) is out.
+> The plan: get him nonstop to a US city on EL AL, where a parent meets him and
+> they fly on to Austin together. So this watches the leg that has to work.
 
 > **Notify-only.** It never books, pays, or logs in anywhere. It just tells you
 > when to go look.
@@ -31,13 +37,19 @@ login. That's what makes it dependable enough to run unattended.
 
 ## How it runs (the important part)
 
-GitHub runs the check **every 2 hours** on its own servers (a free feature called
+GitHub runs the check **every 3 hours** on its own servers (a free feature called
 GitHub Actions). Each run:
 
-1. searches every date in your window for TLV → AUS economy,
-2. keeps the best few options per date (EL AL first, then cheapest),
-3. emails you a short digest **only if** something is new or cheaper,
+1. searches every date in your window across all five gateways for **nonstop
+   EL AL economy** (5 gateways × 14 dates = 70 searches),
+2. keeps the best options per date+gateway (cheapest first),
+3. emails you a short digest, grouped by gateway, **only if** something is new
+   or cheaper,
 4. remembers what it found (in `state/seen.json`) so it won't repeat itself.
+
+> **Why every 3 hours and not hourly?** 70 searches per run is a lot; hourly
+> would blow past the free Actions budget for a private repo. Every 3 hours is
+> plenty for a flight change and stays comfortably free.
 
 If you want to see it working, open the repo's **Actions** tab — every run shows
 a green check, and you can press **Run workflow** to trigger one by hand.
@@ -62,7 +74,7 @@ Everything here can be done in a phone browser.
    workflows, click to enable. Press **Run workflow** once to test — you should
    get the first digest email within a minute or two.
 
-That's it. It'll keep checking every 2 hours until you stop it.
+That's it. It'll keep checking every 3 hours until you stop it.
 
 ---
 
@@ -74,14 +86,15 @@ can edit it right in the GitHub web editor (pencil icon); saving is all it takes
 
 | Setting | Meaning |
 |---|---|
+| `DESTINATIONS` | Comma-separated US gateways to watch (e.g. `JFK,EWR,BOS,MIA,LAX`). |
 | `DATE_START` / `DATE_END` | The window of departure dates to search. |
 | `CURRENT_DEPARTURE_DATE` | The flight you're trying to beat (Aug 4). |
-| `MAX_STOPS` | Ignore itineraries with more stops (0 = nonstop only). |
+| `MAX_STOPS` | `0` = nonstop only. Keep it 0 while Tom flies as a minor. |
+| `REQUIRE_ELAL` | `true` = EL AL-operated only. Set `false` to include other nonstop carriers (United, American, Delta) if you'd consider rebooking off EL AL. |
 | `MAX_PRICE` | Optional ceiling; uncomment to ignore pricier options. |
-| `TOP_PER_DATE` | How many options per date to consider (keeps email short). |
 | `PRICE_DROP_THRESHOLD` | Only re-alert on a drop of at least this many dollars. |
 | `EMAIL_TO` | Comma-separated recipients. |
-| `cron: "0 */2 * * *"` | How often to check. `*/2` = every 2 hours. |
+| `cron: "0 */3 * * *"` | How often to check. `*/3` = every 3 hours. |
 
 To stop it: **Actions** tab → *EL AL seat watcher* → **⋯ → Disable workflow**.
 
@@ -91,10 +104,16 @@ To stop it: **Actions** tab → *EL AL seat watcher* → **⋯ → Disable workf
 
 - **Data comes from Google Flights, not EL AL directly.** It's an excellent,
   continuously-updated mirror of what's bookable, but a seat showing up there
-  doesn't guarantee EL AL will rebook *your ticket* onto it — the tool's job is
+  doesn't guarantee EL AL will rebook *Tom's ticket* onto it — the tool's job is
   to tell you *when to go check / call*, fast. It never books.
-- **TLV → AUS has no nonstop**, so expect 1–2 stop itineraries (often EL AL to
-  the US East Coast, then a partner airline onward).
+- **Nonstop EL AL to the US is pricey and often sold out.** Expect fares around
+  **$6,000+** one-way in peak summer, and some dates/gateways with nothing
+  available in economy at all. That's exactly why watching pays off — it pings
+  you the moment a seat opens.
+- **BOS and LAX are thin.** EL AL flies them less often than JFK/EWR/MIA, so
+  they'll alert rarely. They're kept in just in case.
+- **Confirm EL AL's unaccompanied-minor rules** (age, fees, forms, cutoff
+  times) when you book — the tool can't see those.
 - **If the data source ever changes** and a run can't fetch anything, the tool
   emails you an "all searches failed" heads-up instead of going silently dark.
 

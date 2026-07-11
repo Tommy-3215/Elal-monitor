@@ -69,7 +69,9 @@ def _date_range(start: str, end: str) -> List[str]:
 class Settings:
     # --- Search parameters ---
     origin: str = ""
-    destination: str = ""
+    # US gateways Tom could be met at, flown nonstop by EL AL. A parent meets
+    # him there and they fly on to Austin separately.
+    destinations: List[str] = field(default_factory=list)
     date_start: str = ""
     date_end: str = ""
     passengers: int = 1
@@ -84,8 +86,13 @@ class Settings:
     prefer_elal: bool = True
 
     # --- Alert tuning (keep the noise down) ---
-    # Ignore itineraries with more than this many stops (0 = nonstop only).
-    max_stops: int = 2
+    # A minor can't fly a connection unaccompanied, so this must stay 0 unless
+    # the plan changes: 0 = nonstop only.
+    max_stops: int = 0
+    # Only alert on flights actually operated by EL AL (Tom's carrier). Other
+    # airlines also fly some of these routes nonstop -- flip this off to include
+    # them if you'd consider rebooking off EL AL.
+    require_elal: bool = True
     # Ignore anything above this price, if set (leave blank for no ceiling).
     max_price: Optional[float] = None
     # Only keep the best this-many options per date (ranked EL AL first, then
@@ -124,14 +131,17 @@ class Settings:
         # changing a value and re-running actually takes effect -- this is the
         # bug we fixed from the original.
         self.origin = os.getenv("ORIGIN", "TLV").upper()
-        self.destination = os.getenv("DESTINATION", "AUS").upper()
+        raw_dests = os.getenv("DESTINATIONS") or os.getenv("DESTINATION") \
+            or "JFK,EWR,BOS,MIA,LAX"
+        self.destinations = [d.strip().upper() for d in raw_dests.split(",") if d.strip()]
         self.date_start = os.getenv("DATE_START", "2026-07-21")
         self.date_end = os.getenv("DATE_END", "2026-08-03")
         self.passengers = _get_int("PASSENGERS", 1)
         self.current_departure_date = os.getenv("CURRENT_DEPARTURE_DATE", "2026-08-04")
         self.prefer_elal = _get_bool("PREFER_ELAL", True)
 
-        self.max_stops = _get_int("MAX_STOPS", 2)
+        self.max_stops = _get_int("MAX_STOPS", 0)
+        self.require_elal = _get_bool("REQUIRE_ELAL", True)
         self.max_price = _get_float_or_none("MAX_PRICE")
         self.top_per_date = _get_int("TOP_PER_DATE", 3)
         self.price_drop_threshold = float(_get_int("PRICE_DROP_THRESHOLD", 25))

@@ -32,7 +32,7 @@ from .config import SEEN_STORE_PATH, load_settings
 from .logging_setup import setup_logging
 from .models import Itinerary
 from .notifier import Notifier
-from .search import SearchError, search_one_date
+from .search import SearchError, search_one
 from .store import SeenStore
 
 log = setup_logging()
@@ -55,6 +55,8 @@ def passes_filters(itin: Itinerary, s) -> bool:
         return False
     if itin.stops > s.max_stops:
         return False
+    if s.require_elal and not itin.has_elal:
+        return False
     if s.max_price is not None and itin.price_value is not None \
             and itin.price_value > s.max_price:
         return False
@@ -67,8 +69,8 @@ def rank_key(itin: Itinerary, prefer_elal: bool):
     return (elal_rank, price, itin.stops)
 
 
-def best_per_date(itineraries: List[Itinerary], s) -> List[Itinerary]:
-    """Filter, de-dup, rank, and keep only the top N options for a single date.
+def best_for_group(itineraries: List[Itinerary], s) -> List[Itinerary]:
+    """Filter, de-dup, rank, and keep the top N options for one date+route.
 
     Google Flights returns the same itinerary twice (once in its "best" section,
     once in the full list), so we collapse by fingerprint first, keeping the
@@ -91,46 +93,49 @@ def best_per_date(itineraries: List[Itinerary], s) -> List[Itinerary]:
 # --------------------------------------------------------------------------
 def run_cycle(s, notifier: Notifier, seen: SeenStore,
               dry_run: bool = False) -> Tuple[int, int]:
-    """Search every date, alert on new/cheaper options via one digest.
+    """Search every date across every destination, alert via one digest.
 
-    Returns (n_alerted, n_failed_dates).
+    Returns (n_alerted, n_failed_searches).
     """
-    dates = list(s.dates)
+    # One search per (date, destination). Shuffle so the access pattern looks
+    # less robotic and load spreads across routes rather than hammering one.
+    jobs = [(d, dest) for dest in s.destinations for d in s.dates]
+    random.shuffle(jobs)
     alerts: List[Tuple[str, Itinerary]] = []   # (reason, itin)
-    failed_dates: List[str] = []
+    failed: List[tuple] = []                    # (date, dest) pairs that failed
 
-    for i, d in enumerate(dates):
+    for i, (d, dest) in enumerate(jobs):
         try:
-            found = search_one_date(s, d)
+            found = search_one(s, d, dest)
         except SearchError as exc:
             log.warning("%s", exc)
-            failed_dates.append(d)
+            failed.append((d, dest))
             continue
 
-        for itin in best_per_date(found, s):
+        for itin in best_for_group(found, s):
             reason = seen.classify(itin.fingerprint(), itin.price_value,
                                    s.price_drop_threshold)
             if reason:
                 alerts.append((reason, itin))
 
-        if i < len(dates) - 1:
+        if i < len(jobs) - 1:
             time.sleep(random.uniform(s.per_search_min_delay, s.per_search_max_delay))
 
-    # If every single date failed, that's a real breakage worth flagging.
-    if failed_dates and len(failed_dates) == len(dates):
-        msg = ("Every date search failed this run -- the flight data source may "
-               "have changed or be temporarily unreachable. Check the GitHub "
-               "Actions log.")
+    # If every single search failed, that's a real breakage worth flagging.
+    if failed and len(failed) == len(jobs):
+        msg = ("Every search failed this run -- the flight data source may have "
+               "changed or be temporarily unreachable. Check the GitHub Actions "
+               "log.")
         log.error(msg)
         if not dry_run:
             notifier.send("⚠ EL AL watcher: all searches failed", msg)
-        return (0, len(failed_dates))
+        return (0, len(failed))
 
     if not alerts:
-        log.info("Nothing new to report (%d date(s) failed).", len(failed_dates))
-        return (0, len(failed_dates))
+        log.info("Nothing new to report (%d search(es) failed).", len(failed))
+        return (0, len(failed))
 
-    subject, body = _compose_digest(alerts, s, failed_dates)
+    subject, body = _compose_digest(alerts, s, failed)
 
     if dry_run:
         print("\n" + "=" * 70)
@@ -139,7 +144,7 @@ def run_cycle(s, notifier: Notifier, seen: SeenStore,
         print("-" * 70)
         print(body)
         print("=" * 70)
-        return (len(alerts), len(failed_dates))
+        return (len(alerts), len(failed))
 
     if notifier.send(subject, body):
         for _reason, itin in alerts:
@@ -154,7 +159,7 @@ def run_cycle(s, notifier: Notifier, seen: SeenStore,
 
 
 def _compose_digest(alerts: List[Tuple[str, Itinerary]], s,
-                    failed_dates: List[str]) -> Tuple[str, str]:
+                    failed: List[tuple]) -> Tuple[str, str]:
     new_ones = [it for r, it in alerts if r == "new"]
     cheaper = [it for r, it in alerts if r == "cheaper"]
 
@@ -162,6 +167,7 @@ def _compose_digest(alerts: List[Tuple[str, Itinerary]], s,
         (it.price_value for _r, it in alerts if it.price_value is not None),
         default=None,
     )
+    gateways = sorted({it.destination for _r, it in alerts})
     bits = []
     if new_ones:
         bits.append(f"{len(new_ones)} new")
@@ -169,37 +175,48 @@ def _compose_digest(alerts: List[Tuple[str, Itinerary]], s,
         bits.append(f"{len(cheaper)} cheaper")
     summary = ", ".join(bits) or "update"
     price_bit = f", from ${cheapest:,.0f}" if cheapest is not None else ""
-    subject = (f"✈ Earlier {s.origin}→{s.destination} economy: "
+    subject = (f"✈ Nonstop EL AL {s.origin}→{'/'.join(gateways)}: "
                f"{summary}{price_bit}")
 
+    carrier = "EL AL " if s.require_elal else ""
     lines = [
-        f"Earlier economy options for {s.origin} → {s.destination}, before your "
-        f"{s.current_departure_date} flight.",
+        f"Nonstop {carrier}seats out of {s.origin} to a US gateway, before "
+        f"Tom's current {s.current_departure_date} flight. Meet him there and "
+        f"fly on to Austin together.",
         "",
     ]
+
+    def _section(title: str, items: List[Itinerary]) -> None:
+        lines.append(f"══ {title} ══")
+        # Group by destination gateway, then by date.
+        for gw in sorted({it.destination for it in items}):
+            gw_items = [it for it in items if it.destination == gw]
+            lines.append(f"  ▸ {s.origin} → {gw}")
+            for it in sorted(gw_items, key=lambda x: (x.search_date,
+                                                      rank_key(x, s.prefer_elal))):
+                for ln in it.human_summary().splitlines():
+                    lines.append("  " + ln)
+                lines.append("")
+
     if new_ones:
-        lines.append(f"── {len(new_ones)} NEW option(s) ──")
-        for it in sorted(new_ones, key=lambda x: (x.search_date, rank_key(x, s.prefer_elal))):
-            lines.append(it.human_summary())
-            lines.append("")
+        _section(f"{len(new_ones)} NEWLY AVAILABLE", new_ones)
     if cheaper:
-        lines.append(f"── {len(cheaper)} PRICE DROP(s) ──")
-        for it in sorted(cheaper, key=lambda x: (x.search_date, rank_key(x, s.prefer_elal))):
-            lines.append(it.human_summary())
-            lines.append("")
+        _section(f"{len(cheaper)} PRICE DROP(s)", cheaper)
 
     lines += [
-        "To book or change, open EL AL (or Google Flights) and search "
-        f"{s.origin} → {s.destination} on the date above, economy, "
-        f"{s.passengers} passenger(s).",
+        "To book/change: open EL AL and search the date + gateway above, "
+        f"economy, {s.passengers} passenger. Confirm EL AL's unaccompanied-minor "
+        "rules when booking.",
         "",
         "(Notify-only — nothing was booked. Prices/availability change fast; "
         "confirm on the airline site before acting.)",
     ]
-    if failed_dates:
+    if failed:
+        shown = ", ".join(f"{d}→{dest}" for d, dest in failed[:8])
+        more = "" if len(failed) <= 8 else f" (+{len(failed) - 8} more)"
         lines.append("")
-        lines.append(f"Note: {len(failed_dates)} date(s) couldn't be checked this "
-                     f"run: {', '.join(failed_dates)}.")
+        lines.append(f"Note: {len(failed)} search(es) couldn't be completed this "
+                     f"run: {shown}{more}. They'll be retried next run.")
     return subject, "\n".join(lines)
 
 
@@ -236,8 +253,9 @@ def main() -> int:
             log.error("Notification config error: %s", err)
             return 2
 
-    log.info("Watching %s→%s | %s..%s | economy | pax=%d | earlier than %s",
-             s.origin, s.destination, s.date_start, s.date_end,
+    log.info("Watching nonstop%s %s→[%s] | %s..%s | pax=%d | earlier than %s",
+             " EL AL" if s.require_elal else "", s.origin,
+             ",".join(s.destinations), s.date_start, s.date_end,
              s.passengers, s.current_departure_date)
 
     if not args.loop:
