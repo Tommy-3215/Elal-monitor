@@ -26,7 +26,7 @@ import random
 import sys
 import time
 from datetime import date
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from .config import SEEN_STORE_PATH, load_settings
 from .logging_setup import setup_logging
@@ -155,7 +155,7 @@ def run_cycle(s, notifier: Notifier, seen: SeenStore,
     else:
         log.error("Digest send failed; will retry next run (state not updated).")
 
-    return (len(alerts), len(failed_dates))
+    return (len(alerts), len(failed))
 
 
 def _compose_digest(alerts: List[Tuple[str, Itinerary]], s,
