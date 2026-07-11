@@ -1,8 +1,8 @@
 {
   "123917d9cedc08ee": {
-    "best_price": 4131.0,
+    "best_price": 4102.0,
     "date": "2026-07-30",
-    "summary": "2026-07-30     $4131  2 stops   EL AL (23 hr 50 min)"
+    "summary": "2026-07-30     $4102  2 stops   EL AL (23 hr 50 min)"
   },
   "127a71abfd3d183a": {
     "best_price": 4170.0,
@@ -50,24 +50,29 @@
     "summary": "2026-07-21     $1731  2 stops   EL AL (26 hr 30 min)"
   },
   "562bb3c735ea4563": {
-    "best_price": 4116.0,
+    "best_price": 4087.0,
     "date": "2026-07-30",
-    "summary": "2026-07-30     $4116  2 stops   EL AL (21 hr 55 min)"
+    "summary": "2026-07-30     $4087  2 stops   EL AL (21 hr 55 min)"
   },
   "5cd9a9e88c708346": {
-    "best_price": 3900.0,
+    "best_price": 3873.0,
     "date": "2026-07-29",
-    "summary": "2026-07-29     $3900  2 stops   EL AL (22 hr 35 min)"
+    "summary": "2026-07-29     $3873  2 stops   EL AL (22 hr 35 min)"
   },
   "5d3a10ba0e6d317b": {
-    "best_price": 4592.0,
+    "best_price": 4560.0,
     "date": "2026-07-27",
-    "summary": "2026-07-27     $4592  2 stops   EL AL (26 hr 30 min)"
+    "summary": "2026-07-27     $4560  2 stops   EL AL (26 hr 30 min)"
   },
   "6c06fcb8f04bf807": {
-    "best_price": 4008.0,
+    "best_price": 3980.0,
     "date": "2026-07-29",
-    "summary": "2026-07-29     $4008  2 stops   EL AL (22 hr 50 min)"
+    "summary": "2026-07-29     $3980  2 stops   EL AL (22 hr 50 min)"
+  },
+  "6ccfb0ecd7862c77": {
+    "best_price": 4087.0,
+    "date": "2026-07-23",
+    "summary": "2026-07-23     $4087  2 stops   EL AL (21 hr 55 min)"
   },
   "70038ffeeda27e36": {
     "best_price": 4469.0,
@@ -130,9 +135,9 @@
     "summary": "2026-07-25     $1988  2 stops   ITA, United (23 hr 20 min)"
   },
   "ac4fb4b7d8c6f297": {
-    "best_price": 4008.0,
+    "best_price": 3980.0,
     "date": "2026-07-24",
-    "summary": "2026-07-24     $4008  2 stops   EL AL (22 hr 50 min)"
+    "summary": "2026-07-24     $3980  2 stops   EL AL (22 hr 50 min)"
   },
   "bc8b7bf8a70af4dc": {
     "best_price": 3438.0,
@@ -140,9 +145,9 @@
     "summary": "2026-07-21     $3438  2 stops   EL AL (27 hr 55 min)"
   },
   "c310c8aa751af31b": {
-    "best_price": 4008.0,
+    "best_price": 3980.0,
     "date": "2026-07-30",
-    "summary": "2026-07-30     $4008  2 stops   EL AL (22 hr 50 min)"
+    "summary": "2026-07-30     $3980  2 stops   EL AL (22 hr 50 min)"
   },
   "c611d1b218fa2a46": {
     "best_price": 3980.0,
@@ -150,9 +155,9 @@
     "summary": "2026-07-22     $3980  2 stops   EL AL (22 hr 50 min)"
   },
   "cd6f8241d44408fb": {
-    "best_price": 4812.0,
+    "best_price": 4778.0,
     "date": "2026-07-27",
-    "summary": "2026-07-27     $4812  2 stops   EL AL (22 hr 7 min)"
+    "summary": "2026-07-27     $4778  2 stops   EL AL (22 hr 7 min)"
   },
   "ce1ee8a0b06d83f5": {
     "best_price": 2036.0,
@@ -165,24 +170,24 @@
     "summary": "2026-07-31     $3873  2 stops   EL AL (22 hr 35 min)"
   },
   "d6c52a0843e9f6f6": {
-    "best_price": 4008.0,
+    "best_price": 3980.0,
     "date": "2026-07-23",
-    "summary": "2026-07-23     $4008  2 stops   EL AL (22 hr 50 min)"
+    "summary": "2026-07-23     $3980  2 stops   EL AL (22 hr 50 min)"
   },
   "e14639b7dcb390f1": {
-    "best_price": 4929.0,
+    "best_price": 4895.0,
     "date": "2026-07-26",
-    "summary": "2026-07-26     $4929  2 stops   EL AL (20 hr 42 min)"
+    "summary": "2026-07-26     $4895  2 stops   EL AL (20 hr 42 min)"
   },
   "e205ac78d94a47f4": {
-    "best_price": 4116.0,
+    "best_price": 4087.0,
     "date": "2026-07-24",
-    "summary": "2026-07-24     $4116  2 stops   EL AL (20 hr 55 min)"
+    "summary": "2026-07-24     $4087  2 stops   EL AL (20 hr 55 min)"
   },
   "e323639860d5221e": {
-    "best_price": 4209.0,
+    "best_price": 4180.0,
     "date": "2026-07-24",
-    "summary": "2026-07-24     $4209  2 stops   EL AL (22 hr 25 min)"
+    "summary": "2026-07-24     $4180  2 stops   EL AL (22 hr 25 min)"
   },
   "e97c424edde49711": {
     "best_price": 4874.0,
@@ -200,14 +205,14 @@
     "summary": "2026-07-29     $3437  2 stops   EL AL (23 hr 35 min)"
   },
   "f3676fb922832a72": {
-    "best_price": 3900.0,
+    "best_price": 3873.0,
     "date": "2026-07-28",
-    "summary": "2026-07-28     $3900  2 stops   EL AL (22 hr 35 min)"
+    "summary": "2026-07-28     $3873  2 stops   EL AL (22 hr 35 min)"
   },
   "fa4fc828abc42fe7": {
-    "best_price": 4008.0,
+    "best_price": 3980.0,
     "date": "2026-07-28",
-    "summary": "2026-07-28     $4008  2 stops   EL AL (22 hr 50 min)"
+    "summary": "2026-07-28     $3980  2 stops   EL AL (22 hr 50 min)"
   },
   "fc31d2b8bb4dcd14": {
     "best_price": 1699.0,
