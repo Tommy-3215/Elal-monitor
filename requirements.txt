@@ -1,4 +1,10 @@
-fast-flights>=2.2
+# Pinned exactly. fast-flights re-uses version numbers and its newer 3.x line
+# (plus the primp 1.x it pulls on Python 3.10+) returns HTML this parser can't
+# read -- empty airline names, "Unknown" stops. This 2.2 + primp 0.15.0 combo
+# is verified end-to-end on the CI Python (3.11). Don't loosen these without
+# re-testing a live search.
+fast-flights==2.2
+primp==0.15.0
 typing_extensions>=4.0
 python-dotenv>=1.0
 requests>=2.31
