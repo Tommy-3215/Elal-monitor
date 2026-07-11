@@ -12,6 +12,8 @@ from Tom's design and does not depend on where the data came from.
 from __future__ import annotations
 
 import logging
+import random
+import time
 from typing import List
 
 from fast_flights import FlightData, Passengers, get_flights
@@ -21,6 +23,12 @@ from .models import Itinerary, parse_price
 
 log = logging.getLogger("elal.search")
 
+# A single query to a busy date occasionally comes back empty from a datacenter
+# IP (Google serves a challenge / partial page and the library raises "No
+# flights found"). It's transient -- a retry almost always succeeds -- so we
+# retry a few times before giving up on a date.
+_MAX_ATTEMPTS = 3
+
 
 class SearchError(Exception):
     """Raised when a search can't be completed (network / upstream change)."""
@@ -29,23 +37,36 @@ class SearchError(Exception):
 def search_one_date(s: Settings, date_str: str) -> List[Itinerary]:
     """Return every economy option Google Flights lists for one date.
 
-    Raises SearchError on failure so the caller can report it rather than
-    silently returning nothing.
+    Retries transient failures before giving up. Raises SearchError only if
+    every attempt fails, so the caller can report it rather than silently
+    returning nothing.
     """
-    try:
-        result = get_flights(
-            flight_data=[FlightData(
-                date=date_str,
-                from_airport=s.origin,
-                to_airport=s.destination,
-            )],
-            trip="one-way",
-            seat="economy",
-            passengers=Passengers(adults=s.passengers),
-            fetch_mode=s.fetch_mode,
-        )
-    except Exception as exc:  # noqa: BLE001 -- upstream lib raises broad errors
-        raise SearchError(f"search failed for {date_str}: {exc}") from exc
+    result = None
+    last_exc = None
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        try:
+            result = get_flights(
+                flight_data=[FlightData(
+                    date=date_str,
+                    from_airport=s.origin,
+                    to_airport=s.destination,
+                )],
+                trip="one-way",
+                seat="economy",
+                passengers=Passengers(adults=s.passengers),
+                fetch_mode=s.fetch_mode,
+            )
+            break
+        except Exception as exc:  # noqa: BLE001 -- upstream lib raises broad errors
+            last_exc = exc
+            if attempt < _MAX_ATTEMPTS:
+                backoff = 2.5 * attempt + random.uniform(0, 1.5)
+                log.info("[%s] attempt %d/%d failed (%s); retrying in %.1fs.",
+                         date_str, attempt, _MAX_ATTEMPTS, exc, backoff)
+                time.sleep(backoff)
+    if result is None:
+        raise SearchError(
+            f"search failed for {date_str} after {_MAX_ATTEMPTS} attempts: {last_exc}")
 
     raw = getattr(result, "flights", None) or []
     itineraries: List[Itinerary] = []
