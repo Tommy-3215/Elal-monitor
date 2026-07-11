@@ -3,7 +3,7 @@ name: EL AL seat watcher
 # Runs in GitHub's cloud on a schedule — nothing runs on anyone's computer.
 on:
   schedule:
-    - cron: "0 */2 * * *"   # every 2 hours (UTC). Edit the number to change.
+    - cron: "0 * * * *"   # every hour (UTC). Edit to change frequency.
   workflow_dispatch: {}       # adds a manual "Run workflow" button for testing
 
 # Lets the run save its memory (state/seen.json) back to the repo so it
