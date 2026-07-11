@@ -1,0 +1,11 @@
+# Local secrets — NEVER commit this. Cloud runs use GitHub Actions secrets.
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs (state/seen.json IS committed on purpose — it's the watcher's memory)
+logs/

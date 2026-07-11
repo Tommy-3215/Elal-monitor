@@ -1,0 +1,70 @@
+name: EL AL seat watcher
+
+# Runs in GitHub's cloud on a schedule — nothing runs on anyone's computer.
+on:
+  schedule:
+    - cron: "0 */2 * * *"   # every 2 hours (UTC). Edit the number to change.
+  workflow_dispatch: {}       # adds a manual "Run workflow" button for testing
+
+# Lets the run save its memory (state/seen.json) back to the repo so it
+# doesn't re-alert the same flights on the next run.
+permissions:
+  contents: write
+
+# If a run is still going when the next is due, let it finish first.
+concurrency:
+  group: seat-watcher
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # ---- What to search (edit these freely; not secret) ----
+      ORIGIN: TLV
+      DESTINATION: AUS
+      DATE_START: "2026-07-21"
+      DATE_END: "2026-08-03"
+      CURRENT_DEPARTURE_DATE: "2026-08-04"
+      PASSENGERS: "1"
+      # ---- Alert tuning ----
+      MAX_STOPS: "2"
+      TOP_PER_DATE: "3"
+      PRICE_DROP_THRESHOLD: "25"
+      PREFER_ELAL: "true"
+      # MAX_PRICE: "1800"    # uncomment to ignore anything pricier
+      # ---- Email (address is not secret; the password is) ----
+      NOTIFY_CHANNEL: email
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: "587"
+      SMTP_USER: ozertom@gmail.com
+      EMAIL_FROM: ozertom@gmail.com
+      EMAIL_TO: ozertom@gmail.com,amitozer@gmail.com
+      # The ONLY secret. Add it in: Settings → Secrets and variables → Actions.
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check for earlier flights
+        run: python -m src.monitor
+
+      - name: Remember what we found
+        run: |
+          if [ -n "$(git status --porcelain state/)" ]; then
+            git config user.name  "seat-watcher"
+            git config user.email "actions@users.noreply.github.com"
+            git add state/
+            git commit -m "Update watcher memory [skip ci]"
+            git push
+          else
+            echo "No change to watcher memory."
+          fi
