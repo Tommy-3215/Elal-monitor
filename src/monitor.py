@@ -57,9 +57,13 @@ def passes_filters(itin: Itinerary, s) -> bool:
         return False
     if s.require_elal and not itin.has_elal:
         return False
-    if s.max_price is not None and itin.price_value is not None \
-            and itin.price_value > s.max_price:
-        return False
+    # When a price ceiling is set, the price IS our economy-vs-business signal.
+    # A flight with no readable price ("Price unavailable") can't be confirmed
+    # as economy, so exclude it rather than false-alarm -- and of course exclude
+    # anything above the ceiling (the ~$6k business fallbacks).
+    if s.max_price is not None:
+        if itin.price_value is None or itin.price_value > s.max_price:
+            return False
     return True
 
 
