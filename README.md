@@ -61,13 +61,15 @@ a green check, and you can press **Run workflow** to trigger one by hand.
 Everything here can be done in a phone browser.
 
 1. **This repo exists on GitHub** (you're reading its README, so ✅).
-2. **Add the email password as a secret.** Make a Gmail *App Password* for the
-   sending account (`ozertom@gmail.com`) at
-   [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
-   — it's a 16-character code, not the real password. Then in this repo go to
-   **Settings → Secrets and variables → Actions → New repository secret**, name
-   it exactly `SMTP_PASSWORD`, paste the code, and save. That's the only secret,
-   and once saved nobody (not even you) can read it back.
+2. **Add three secrets.** This repo is public, so the email addresses live in
+   secrets, not in the code. In **Settings → Secrets and variables → Actions →
+   New repository secret**, add:
+   - `SMTP_USER` — the sending Gmail address.
+   - `EMAIL_TO` — comma-separated recipients (e.g. sender + a parent).
+   - `SMTP_PASSWORD` — a Gmail *App Password* for the sending account, from
+     [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+     (a 16-character code, not the real password). Once saved, nobody — not even
+     you — can read a secret back.
    - *If the App Passwords page says it's unavailable,* turn on 2-Step
      Verification first (Google Account → Security), then try again.
 3. **Turn on scheduled runs.** In the **Actions** tab, if it asks to enable
