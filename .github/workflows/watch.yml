@@ -3,9 +3,8 @@ name: EL AL seat watcher
 # Runs in GitHub's cloud on a schedule — nothing runs on anyone's computer.
 on:
   schedule:
-    - cron: "0 */3 * * *"   # every 3 hours (UTC). 5 gateways x 14 dates = 70
-                            # searches/run; hourly would exceed the free
-                            # private-repo Actions budget. Edit to change.
+    - cron: "0 * * * *"   # every hour (UTC). Free because this is a PUBLIC repo
+                          # (unlimited Actions minutes). Edit to change.
   workflow_dispatch: {}       # adds a manual "Run workflow" button for testing
 
 # Lets the run save its memory (state/seen.json) back to the repo so it
@@ -48,10 +47,11 @@ jobs:
       NOTIFY_CHANNEL: email
       SMTP_HOST: smtp.gmail.com
       SMTP_PORT: "587"
-      SMTP_USER: ozertom@gmail.com
-      EMAIL_FROM: ozertom@gmail.com
-      EMAIL_TO: ozertom@gmail.com,amitozer@gmail.com
-      # The ONLY secret. Add it in: Settings → Secrets and variables → Actions.
+      # Email addresses come from secrets so they're not exposed in this public
+      # repo. (EMAIL_FROM is omitted; the notifier falls back to SMTP_USER.)
+      # Add these in: Settings → Secrets and variables → Actions.
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
 
     steps:
