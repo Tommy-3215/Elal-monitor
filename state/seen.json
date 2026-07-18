@@ -1,4 +1,9 @@
 {
+  "0eb7d8e48bddc386": {
+    "best_price": 2431.0,
+    "date": "2026-07-21",
+    "summary": "2026-07-21     $2431  nonstop   EL AL (13 hr 15 min)"
+  },
   "1f1aef13f71a4838": {
     "best_price": 2431.0,
     "date": "2026-07-31",
@@ -13,6 +18,11 @@
     "best_price": 1881.0,
     "date": "2026-07-22",
     "summary": "2026-07-22     $1881  nonstop   EL AL (12 hr)"
+  },
+  "91e26ce6e49c5a80": {
+    "best_price": 1881.0,
+    "date": "2026-07-23",
+    "summary": "2026-07-23     $1881  nonstop   EL AL (11 hr 45 min)"
   },
   "f377ea2d7a287cb7": {
     "best_price": 2431.0,
