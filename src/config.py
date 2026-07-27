@@ -161,7 +161,12 @@ class Settings:
         self.telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
         self.log_level = os.getenv("LOG_LEVEL", "INFO")
 
-        self.dates = _date_range(self.date_start, self.date_end)
+        # Only search today and forward. Past dates always fail (you can't book
+        # a flight that already departed) -- they'd waste searches and clutter
+        # the "couldn't complete" note as the calendar moves past DATE_START.
+        today = date.today().isoformat()
+        start = max(self.date_start, today)
+        self.dates = _date_range(start, self.date_end) if start <= self.date_end else []
 
     @property
     def email_to_list(self) -> List[str]:

@@ -39,9 +39,10 @@ jobs:
       # This ceiling drops the business fallbacks so the watcher stays quiet
       # until an actual economy seat opens, then alerts. Raise it if you think
       # a real economy fare could exceed it; keep it well under ~$6k.
-      MAX_PRICE: "3500"
+      MAX_PRICE: "3000"
       TOP_PER_DATE: "3"
-      PRICE_DROP_THRESHOLD: "150"
+      # Fares here run ~$2-3k, so a small $150 wiggle shouldn't re-alert.
+      PRICE_DROP_THRESHOLD: "400"
       PREFER_ELAL: "true"
       # ---- Email (address is not secret; the password is) ----
       NOTIFY_CHANNEL: email
